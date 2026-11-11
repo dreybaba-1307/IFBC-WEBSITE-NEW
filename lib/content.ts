@@ -600,3 +600,29 @@ export const defaultContent: SiteContent = {
   },
   messages: [],
 };
+
+/**
+ * Deep-merges a stored document over the built-in defaults so a missing or
+ * partial document never breaks a page.
+ */
+export function normalizeContent(saved: Partial<SiteContent> | null | undefined): SiteContent {
+  if (!saved) return defaultContent;
+  return {
+    ...defaultContent,
+    ...saved,
+    site: {
+      ...defaultContent.site,
+      ...(saved.site ?? {}),
+      socials: { ...defaultContent.site.socials, ...(saved.site?.socials ?? {}) },
+    },
+    hero: { ...defaultContent.hero, ...(saved.hero ?? {}) },
+    theme: { ...defaultContent.theme, ...(saved.theme ?? {}) },
+    about: { ...defaultContent.about, ...(saved.about ?? {}) },
+    identity: { ...defaultContent.identity, ...(saved.identity ?? {}) },
+    leadership: { ...defaultContent.leadership, ...(saved.leadership ?? {}) },
+    giving: { ...defaultContent.giving, ...(saved.giving ?? {}) },
+    contact: { ...defaultContent.contact, ...(saved.contact ?? {}) },
+    visit: { ...defaultContent.visit, ...(saved.visit ?? {}) },
+    messages: saved.messages ?? [],
+  };
+}

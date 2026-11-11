@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getContent, saveContent } from "@/lib/store";
+import { getContentFresh, saveContent } from "@/lib/store";
 import { isAuthenticated } from "@/lib/auth";
 import type { SiteContent } from "@/lib/content";
 
@@ -7,7 +7,7 @@ export async function GET() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const content = await getContent();
+  const content = await getContentFresh();
   return NextResponse.json(content, {
     headers: { "Cache-Control": "no-store" },
   });

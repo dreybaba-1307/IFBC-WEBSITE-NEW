@@ -10,7 +10,7 @@ A complete redesign of [ifbclagos.org](https://www.ifbclagos.org) — a warm, ci
 - Tailwind CSS v4 (design tokens in `app/globals.css`)
 - `motion` for reveals, split text and parallax; Lenis for smooth scrolling
 - `lucide-react` icons
-- Content stored as JSON on disk (`data/content.json`), read/written by `lib/store.ts`
+- **TiDB Cloud** (MySQL-compatible, `mysql2` driver) for content and messages, with a zero-setup JSON file store as the local fallback — both behind `lib/store.ts`
 
 ## Getting started
 
@@ -38,12 +38,35 @@ The dashboard covers: site identity & logos, hero, year theme, about & stats, vi
 
 ### How content is stored
 
+There are two interchangeable backends behind `lib/store.ts` — nothing else in the app knows which one is live.
+
+**1. TiDB Cloud (used when `DATABASE_URL` is set)**
+
+| Table | Contents |
+| --- | --- |
+| `site_content` | One row (`id = 1`) whose `doc` JSON column holds the whole site document |
+| `messages` | Contact / testimony / visit submissions, indexed by date and read state |
+
+The site content is stored as a single JSON document because the admin saves the whole document at once; messages get a real table so the inbox can grow, be filtered and be trimmed to the newest 500. Tables are created automatically on first use.
+
+```bash
+npm run db:check   # verify the connection
+npm run db:init    # create database + tables, seed from data/content.json
+npm run db:seed    # re-upload data/content.json after local edits
+```
+
+**2. Local JSON file (used when `DATABASE_URL` is empty)**
+
 - Defaults live in `lib/content.ts` and are always the fallback.
 - Saved edits are merged over those defaults in `data/content.json`.
-- `data/content.json` and `public/uploads/` are created on first use.
-- The public site reads content on every request (`force-dynamic`), so edits appear immediately.
+- Messages are stored inside that same document.
+- Zero setup: `npm run dev` works with no database at all.
 
-> **Deployment note:** this setup writes to the local filesystem. It works on a VPS, Docker, or any persistent Node host. Serverless platforms with a read-only or ephemeral filesystem (e.g. Vercel) need the store swapped for a database or object storage — `lib/store.ts` is the only file to change.
+In both modes the public site reads content on every request (`force-dynamic`), so edits appear immediately, and a partial or missing document is deep-merged over the defaults so a page can never break.
+
+Reads are served from a 15-second in-process cache so a burst of visitors shares one database round trip. Saving in `/admin` clears the cache on that instance, and the admin always reads fresh (`getContentFresh()`), so edits are visible the moment you press **Save changes**. Set `CONTENT_CACHE_TTL_MS=0` to disable the cache.
+
+> **Deployment note:** with `DATABASE_URL` set the app is fully stateless and can run on Vercel, Docker, or any Node host. Without it, writes go to the local filesystem, which needs a persistent host.
 
 ## API
 
@@ -74,10 +97,14 @@ components/
   motion.tsx         animation primitives
   ui.tsx             shared visual primitives
 lib/
-  content.ts         content types + defaults
-  store.ts           JSON file store
+  content.ts         content types + defaults + normalizeContent()
+  db.ts              TiDB connection pool, schema bootstrap
+  store.ts           storage facade (picks a backend)
+  store-db.ts         TiDB store (site_content + messages tables)
+  store-file.ts       JSON file store (local fallback)
   auth.ts            password + signed session cookie
-data/content.json    saved edits (created on first save)
+scripts/db.mjs       db:check / db:init / db:seed helpers
+data/content.json    saved edits when no database is configured
 public/images/       curated photography and church logos
 ```
 
