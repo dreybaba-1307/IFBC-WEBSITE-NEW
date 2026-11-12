@@ -81,11 +81,17 @@ export function SplitText({
   className,
   delay = 0,
   trigger = "view",
+  accent,
+  accentClassName,
 }: {
   lines: string[];
   className?: string;
   delay?: number;
   trigger?: "view" | "mount";
+  /** Extra final line (e.g. the italic "& joy."). Rendered inside the same
+   *  wrapper so it receives the `split-in` class and actually reveals. */
+  accent?: string;
+  accentClassName?: string;
 }) {
   const ref = useRef<HTMLSpanElement | null>(null);
 
@@ -122,6 +128,16 @@ export function SplitText({
           </span>
         </span>
       ))}
+      {accent ? (
+        <span className="split-line">
+          <span
+            className={accentClassName}
+            style={{ "--line-delay": `${delay + lines.length * 95}ms` } as CSSProperties}
+          >
+            {accent}
+          </span>
+        </span>
+      ) : null}
     </span>
   );
 }

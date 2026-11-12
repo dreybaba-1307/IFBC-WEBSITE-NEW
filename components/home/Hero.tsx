@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
-import type { CSSProperties } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { ArrowUpRight, Play } from "lucide-react";
 import { Star } from "@/components/ui";
@@ -76,16 +75,14 @@ export function Hero({ content }: { content: SiteContent }) {
         </div>
 
         <div className="mt-16 max-w-5xl md:mt-0">
-          <h1 className="text-[clamp(3.6rem,11.2vw,10rem)] font-normal leading-[0.86] tracking-[-0.04em]">
-            <SplitText lines={hero.titleLines} trigger="mount" delay={350} />
-            <span className="split-line">
-              <span
-                className="block italic text-gold-soft"
-                style={{ "--line-delay": "620ms" } as CSSProperties}
-              >
-                {hero.accentLine}
-              </span>
-            </span>
+          <h1 className="text-[clamp(3rem,11.2vw,10rem)] font-normal leading-[0.86] tracking-[-0.04em]">
+            <SplitText
+              lines={hero.titleLines}
+              trigger="mount"
+              delay={350}
+              accent={hero.accentLine}
+              accentClassName="block italic text-gold-soft"
+            />
           </h1>
 
           <div className="mt-9 grid gap-8 md:mt-12 md:grid-cols-[1.1fr_0.9fr] md:items-end">

@@ -13,8 +13,23 @@ import type { MessageInput } from "./store-file";
 const MAX_MESSAGES = 500;
 
 let lastErrorLog = 0;
+let buildWarned = false;
+
+const BUILDING = (process.env.NEXT_PHASE ?? "").includes("phase-production-build");
 
 function logDbError(error: unknown) {
+  if (BUILDING) {
+    // A build must never fail because the database is briefly unreachable, and
+    // a stack trace per prerendered page just buries the real build output.
+    if (buildWarned) return;
+    buildWarned = true;
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(
+      `[db] TiDB unreachable during build (${message}). Prerendered pages will use built-in content.`,
+    );
+    return;
+  }
+
   // One line per minute is enough to spot a misconfiguration without
   // flooding the logs on every page view.
   const now = Date.now();

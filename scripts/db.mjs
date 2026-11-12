@@ -9,6 +9,7 @@
  * Reads DATABASE_URL from .env.local / .env / the environment.
  */
 import mysql from "mysql2/promise";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
@@ -25,6 +26,31 @@ const targetDatabase =
   process.env.TIDB_DATABASE || decodeURIComponent(url.pathname.replace(/^\//, "")) || "ifbc";
 const useSsl = process.env.TIDB_NO_SSL !== "1";
 
+/**
+ * Masked summary of the connection string. The password is never printed —
+ * only a short fingerprint — so two machines can prove they hold the same
+ * secret without either of them revealing it.
+ */
+function fingerprint(secret) {
+  return createHash("sha256").update(secret).digest("hex").slice(0, 8);
+}
+
+function describeConnection(raw, parsed, password) {
+  return {
+    rawLength: raw.length,
+    host: parsed.hostname,
+    port: Number(parsed.port || 4000),
+    user: decodeURIComponent(parsed.username),
+    database: targetDatabase,
+    passwordLength: password.length,
+    passwordSha256: password ? fingerprint(password) : "(empty)",
+    passwordHasWhitespace: /\s/.test(password),
+    passwordHasQuotes: /^["']|["']$/.test(password),
+    rawHasSurroundingQuotes: /^\s*["']|["']\s*$/.test(raw),
+    ssl: useSsl,
+  };
+}
+
 const base = {
   host: url.hostname,
   port: Number(url.port || 4000),
@@ -35,6 +61,18 @@ const base = {
   timezone: "Z",
   ...(useSsl ? { ssl: { minVersion: "TLSv1.2", rejectUnauthorized: true } } : {}),
 };
+
+const argv = process.argv.slice(2);
+const flags = new Set(argv.filter((arg) => arg.startsWith("--")));
+
+if (flags.has("--show")) {
+  console.log("DATABASE_URL (masked)");
+  for (const [key, value] of Object.entries(describeConnection(connectionString, url, base.password))) {
+    console.log(`  ${key}: ${value}`);
+  }
+  console.log("");
+}
+
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS site_content (
@@ -139,7 +177,7 @@ async function seed() {
   }
 }
 
-const command = process.argv[2] ?? "check";
+const command = argv.find((arg) => !arg.startsWith("--")) ?? "check";
 const run = { check, init, seed }[command];
 if (!run) {
   console.error(`Unknown command "${command}". Use check, init or seed.`);
@@ -148,5 +186,15 @@ if (!run) {
 run().catch((error) => {
   console.error(`\n${command} failed: ${error.message}`);
   if (error.code) console.error("code:", error.code);
+  if (error.code === "ER_ACCESS_DENIED_ERROR") {
+    console.error(
+      "\nThe host and user were accepted, so the password is the problem.\n" +
+        "Run `npm run db:check -- --show` and compare passwordLength / passwordSha256\n" +
+        "between this machine and the host that is failing (e.g. a Vercel env var).",
+    );
+  }
+  if (error.code === "ER_BAD_DB_ERROR") {
+    console.error("\nThe database does not exist yet. Run `npm run db:init`.");
+  }
   process.exit(1);
 });
