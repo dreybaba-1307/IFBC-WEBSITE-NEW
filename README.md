@@ -68,7 +68,7 @@ npm run db:seed    # re-upload data/content.json after local edits
 
 In both modes the public site reads content on every request (`force-dynamic`), so edits appear immediately, and a partial or missing document is deep-merged over the defaults so a page can never break.
 
-Reads are served from a 15-second in-process cache so a burst of visitors shares one database round trip. Saving in `/admin` clears the cache on that instance, and the admin always reads fresh (`getContentFresh()`), so edits are visible the moment you press **Save changes**. Set `CONTENT_CACHE_TTL_MS=0` to disable the cache.
+Reads are served from a short in-process cache (5 seconds by default) so a burst of visitors shares one database round trip. Saving in `/admin` clears the cache on that instance, and the admin always reads fresh (`getContentFresh()`), so edits are visible as soon as you press **Save changes** — other server instances catch up within the cache window. Set `CONTENT_CACHE_TTL_MS=0` to disable the cache entirely.
 
 > **Deployment note:** with `DATABASE_URL` set the app is fully stateless and can run on Vercel, Docker, or any Node host. Without it, writes go to the local filesystem, which needs a persistent host.
 

@@ -43,9 +43,9 @@ const cachedGetContent = cache((): Promise<SiteContent> => readCached());
  */
 const CACHE_TTL_MS = (() => {
   const raw = process.env.CONTENT_CACHE_TTL_MS;
-  if (raw === undefined) return 15_000;
+  if (raw === undefined) return 5_000;
   const value = Number(raw);
-  return Number.isFinite(value) && value >= 0 ? value : 15_000;
+  return Number.isFinite(value) && value >= 0 ? value : 5_000;
 })();
 
 let cached: { value: SiteContent; at: number } | null = null;
