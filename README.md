@@ -34,7 +34,9 @@ ADMIN_SECRET="a-long-random-string"   # signs the 12-hour session cookie
 
 Copy `.env.example` to `.env.local` and change both before deploying.
 
-The dashboard covers: site identity & logos, hero, year theme, about & stats, vision/mission/values/Yoruba anthem, service times, leadership, ministries, events, sermons, testimonies, gallery, giving accounts, contact, visit info and the message inbox. Changes go live as soon as **Save changes** is pressed. Uploaded images are written to `public/uploads/`.
+The dashboard covers: site identity & logos, hero, year theme, about & stats, vision/mission/values/Yoruba anthem, service times, leadership, ministries, events, sermons, testimonies, gallery, giving accounts, contact, visit info and the message inbox. Changes go live as soon as **Save changes** is pressed.
+
+Uploaded images go wherever the active store puts them: `public/uploads/` for the local JSON backend, and the `media` table in TiDB when `DATABASE_URL` is set (Vercel's filesystem is read-only, so files cannot live on disk there). The upload endpoint returns a URL either way, so the dashboard does not care which backend is live.
 
 ### How content is stored
 
@@ -46,8 +48,9 @@ There are two interchangeable backends behind `lib/store.ts` — nothing else in
 | --- | --- |
 | `site_content` | One row (`id = 1`) whose `doc` JSON column holds the whole site document |
 | `messages` | Contact / testimony / visit submissions, indexed by date and read state |
+| `media` | Uploaded images as `MEDIUMBLOB` with filename, MIME type and size, served by `GET /api/media/[id]` |
 
-The site content is stored as a single JSON document because the admin saves the whole document at once; messages get a real table so the inbox can grow, be filtered and be trimmed to the newest 500. Tables are created automatically on first use.
+The site content is stored as a single JSON document because the admin saves the whole document at once; messages get a real table so the inbox can grow, be filtered and be trimmed to the newest 500. Uploaded images live in `media` so nothing is written to the filesystem in production. Tables are created automatically on first use.
 
 ```bash
 npm run db:check   # verify the connection
@@ -60,6 +63,7 @@ npm run db:seed    # re-upload data/content.json after local edits
 - Defaults live in `lib/content.ts` and are always the fallback.
 - Saved edits are merged over those defaults in `data/content.json`.
 - Messages are stored inside that same document.
+- Uploaded images are written to `public/uploads/`.
 - Zero setup: `npm run dev` works with no database at all.
 
 In both modes the public site reads content on every request (`force-dynamic`), so edits appear immediately, and a partial or missing document is deep-merged over the defaults so a page can never break.
@@ -81,6 +85,7 @@ Reads are served from a 15-second in-process cache so a burst of visitors shares
 | `PATCH /api/admin/messages` | Mark a message read/unread |
 | `DELETE /api/admin/messages` | Delete a message |
 | `POST /api/admin/upload` | Upload an image (max 8 MB, auth required) |
+| `GET /api/media/[id]` | Serve an image stored in the `media` table (immutable cache) |
 
 ## Structure
 
@@ -100,7 +105,7 @@ lib/
   content.ts         content types + defaults + normalizeContent()
   db.ts              TiDB connection pool, schema bootstrap
   store.ts           storage facade (picks a backend)
-  store-db.ts         TiDB store (site_content + messages tables)
+  store-db.ts         TiDB store (site_content + messages + media tables)
   store-file.ts       JSON file store (local fallback)
   auth.ts            password + signed session cookie
 scripts/db.mjs       db:check / db:init / db:seed helpers

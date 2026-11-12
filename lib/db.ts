@@ -100,6 +100,16 @@ const SCHEMA = [
      KEY idx_messages_created (created_at),
      KEY idx_messages_read (is_read)
    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+  `CREATE TABLE IF NOT EXISTS media (
+     id VARCHAR(32) NOT NULL,
+     filename VARCHAR(160) NOT NULL DEFAULT '',
+     mime VARCHAR(120) NOT NULL,
+     size INT UNSIGNED NOT NULL DEFAULT 0,
+     data MEDIUMBLOB NOT NULL,
+     created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+     PRIMARY KEY (id),
+     KEY idx_media_created (created_at)
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 ];
 
 /** Creates the tables on first use so a fresh TiDB instance just works. */

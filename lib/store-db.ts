@@ -1,13 +1,16 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import type { RowDataPacket } from "mysql2/promise";
 import { defaultContent, normalizeContent, type Message, type SiteContent } from "./content";
 import { ensureSchema, getPool } from "./db";
-import type { MessageInput } from "./store-file";
+import type { MediaFile, MessageInput, StoredMedia, UploadInput } from "./store-file";
 
 /**
  * TiDB Cloud store. The site content is kept as a single JSON document in
  * `site_content` (mirroring the admin's "save everything at once" flow) while
- * form submissions live in a proper `messages` table with indexes.
+ * form submissions live in a proper `messages` table and uploaded images are
+ * kept in `media` — Vercel's filesystem is read-only, so blobs cannot live on
+ * disk in production.
  */
 
 const MAX_MESSAGES = 500;
@@ -199,4 +202,35 @@ export async function setMessageRead(id: string, read: boolean): Promise<void> {
 export async function deleteMessage(id: string): Promise<void> {
   await ensureSchema();
   await getPool().execute("DELETE FROM messages WHERE id = ?", [id]);
+}
+
+const MEDIA_ID = /^[a-z0-9]{8,32}$/;
+
+export async function saveUpload(input: UploadInput): Promise<StoredMedia> {
+  await ensureSchema();
+  const id = `${Date.now().toString(36)}${randomBytes(6).toString("hex")}`;
+  const filename = `${input.name || "image"}-${Date.now().toString(36)}.${input.ext}`;
+  await getPool().execute(
+    `INSERT INTO media (id, filename, mime, size, data, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [id, filename, input.mime, input.bytes.length, input.bytes, new Date()],
+  );
+  return { url: `/api/media/${id}` };
+}
+
+export async function readMedia(id: string): Promise<MediaFile | null> {
+  if (!MEDIA_ID.test(id)) return null;
+  await ensureSchema();
+  const [rows] = await getPool().query<RowDataPacket[]>(
+    "SELECT filename, mime, data FROM media WHERE id = ? LIMIT 1",
+    [id],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  const bytes = Buffer.isBuffer(row.data) ? row.data : Buffer.from(row.data ?? []);
+  return {
+    filename: String(row.filename ?? ""),
+    mime: String(row.mime ?? "application/octet-stream"),
+    bytes,
+  };
 }

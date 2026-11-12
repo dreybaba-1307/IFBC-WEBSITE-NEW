@@ -13,6 +13,25 @@ const DATA_FILE = path.join(DATA_DIR, "content.json");
 
 export type MessageInput = Omit<Message, "id" | "createdAt" | "read">;
 
+/** A validated image handed to the store by the upload route. */
+export type UploadInput = { name: string; ext: string; mime: string; bytes: Buffer };
+export type StoredMedia = { url: string };
+export type MediaFile = { filename: string; mime: string; bytes: Buffer };
+
+/** Local development writes straight into public/uploads, served statically. */
+export async function saveUpload(input: UploadInput): Promise<StoredMedia> {
+  const filename = `${input.name || "image"}-${Date.now().toString(36)}.${input.ext}`;
+  const dir = path.join(process.cwd(), "public", "uploads");
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(path.join(dir, filename), input.bytes);
+  return { url: `/uploads/${filename}` };
+}
+
+/** Files live on disk here, so the media route has nothing to serve. */
+export async function readMedia(_id: string): Promise<MediaFile | null> {
+  return null;
+}
+
 export async function getContent(): Promise<SiteContent> {
   try {
     const raw = await fs.readFile(DATA_FILE, "utf8");

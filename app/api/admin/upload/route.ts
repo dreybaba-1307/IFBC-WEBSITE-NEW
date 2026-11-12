@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { isAuthenticated } from "@/lib/auth";
+import { saveUpload } from "@/lib/store";
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const allowed = new Map([
@@ -30,19 +29,24 @@ export async function POST(request: Request) {
     if (!ext) {
       return NextResponse.json({ error: "Unsupported image type." }, { status: 415 });
     }
-    const base = file.name
+    const name = file.name
       .replace(/\.[^.]+$/, "")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .slice(0, 48);
-    const filename = `${base || "image"}-${Date.now().toString(36)}.${ext}`;
-    const dir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(dir, { recursive: true });
-    const bytes = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(path.join(dir, filename), bytes);
-    return NextResponse.json({ ok: true, url: `/uploads/${filename}` });
-  } catch {
+
+    // The store decides where bytes live: public/uploads locally, the `media`
+    // table when TiDB is configured (Vercel's filesystem is read-only).
+    const { url } = await saveUpload({
+      name,
+      ext,
+      mime: file.type,
+      bytes: Buffer.from(await file.arrayBuffer()),
+    });
+    return NextResponse.json({ ok: true, url });
+  } catch (error) {
+    console.error("[upload]", error);
     return NextResponse.json({ error: "Upload failed." }, { status: 500 });
   }
 }

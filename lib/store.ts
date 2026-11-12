@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import type { Message, SiteContent } from "./content";
+import type { MediaFile, StoredMedia, UploadInput } from "./store-file";
 import { databaseEnabled } from "./db";
 import * as fileStore from "./store-file";
 import * as dbStore from "./store-db";
@@ -16,6 +17,7 @@ import * as dbStore from "./store-db";
  */
 
 export type MessageInput = Omit<Message, "id" | "createdAt" | "read">;
+export type { MediaFile, StoredMedia, UploadInput } from "./store-file";
 
 export function storageBackend(): "tidb" | "file" {
   return databaseEnabled() ? "tidb" : "file";
@@ -108,4 +110,12 @@ export async function setMessageRead(id: string, read: boolean): Promise<void> {
 export async function deleteMessage(id: string): Promise<void> {
   invalidate();
   await backend().deleteMessage(id);
+}
+
+export function saveUpload(input: UploadInput): Promise<StoredMedia> {
+  return backend().saveUpload(input);
+}
+
+export function readMedia(id: string): Promise<MediaFile | null> {
+  return backend().readMedia(id);
 }
