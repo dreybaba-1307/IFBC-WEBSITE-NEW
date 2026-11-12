@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
-const timeline = [
+const timeline = (tagline: string) => [
   {
     year: "1850",
     title: "A seed in Ijaye",
@@ -30,7 +30,7 @@ const timeline = [
   {
     year: "Today",
     title: "A sanctuary in Ifako",
-    text: "In Ifako-Ijaiye, we gather weekly to worship, disciple, and serve — a Sanctuary of Truth & Joy for our community.",
+    text: `In Ifako-Ijaiye, we gather weekly to worship, disciple, and serve — a ${tagline} for our community.`,
   },
   {
     year: "Tomorrow",
@@ -42,6 +42,8 @@ const timeline = [
 export default async function AboutPage() {
   const content = await getContent();
   const { about, identity, site } = content;
+  const [taglineHead, ...taglineRest] = site.tagline.split(/\s+of\s+/i);
+  const taglineTail = taglineRest.join(" of ");
 
   return (
     <>
@@ -49,9 +51,11 @@ export default async function AboutPage() {
         eyebrow="Our story · Est. 1850 heritage"
         title={
           <>
-            A sanctuary of
+            {taglineTail ? `${taglineHead} of` : taglineHead}
             <br />
-            <span className="italic text-gold-soft">truth &amp; joy.</span>
+            <span className="italic text-gold-soft">
+              {taglineTail || "truth & joy"}.
+            </span>
           </>
         }
         copy={about.quote}
@@ -150,7 +154,7 @@ export default async function AboutPage() {
           </div>
 
           <div className="mt-16 grid gap-0 border-t border-ink/15 md:grid-cols-2 lg:grid-cols-4">
-            {timeline.map((item, i) => (
+            {timeline(site.tagline).map((item, i) => (
               <Reveal key={item.year} delay={i * 90}>
                 <div className="group h-full border-b border-ink/15 px-0 py-8 md:border-r md:px-8 md:first:pl-0 lg:border-b-0">
                   <span className="font-mono text-[0.56rem] uppercase tracking-[0.24em] text-clay">

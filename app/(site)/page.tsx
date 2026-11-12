@@ -16,23 +16,24 @@ import { getContent } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Sanctuary of Truth & Joy",
-  description:
-    "Ifako First Baptist Church — a Baptist family in Ifako-Agege, Lagos. Sunday worship 10:00 AM. Rooted in faith, committed to community.",
-  alternates: { canonical: "/" },
-};
-
-const band = [
-  "My year of Glorious Comeback",
-  "Judges 11:6–9",
-  "Sanctuary of Truth & Joy",
-  "Ifako First Baptist Church",
-  "Est. 1850 heritage",
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const { site } = await getContent();
+  return {
+    title: site.tagline,
+    description: site.description,
+    alternates: { canonical: "/" },
+  };
+}
 
 export default async function HomePage() {
   const content = await getContent();
+  const band = [
+    content.theme.title,
+    content.theme.verse,
+    content.site.tagline,
+    content.site.name,
+    "Est. 1850 heritage",
+  ].filter(Boolean);
 
   return (
     <>

@@ -2,32 +2,42 @@
 
 import { useEffect, useState } from "react";
 
-function nextSunday() {
+function parseTime(value: string) {
+  const match = value.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+  if (!match) return { hours: 10, minutes: 0 };
+  let hours = Number(match[1]) % 12;
+  if (/pm/i.test(match[3] ?? "")) hours += 12;
+  return { hours, minutes: Number(match[2] ?? 0) };
+}
+
+function nextSunday(hours: number, minutes: number) {
   const now = new Date();
   const d = new Date(now);
   const day = d.getDay();
   const delta = (7 - day) % 7;
   d.setDate(d.getDate() + delta);
-  d.setHours(10, 0, 0, 0);
+  d.setHours(hours, minutes, 0, 0);
   if (d.getTime() <= now.getTime()) d.setDate(d.getDate() + 7);
   return d;
 }
 
 const labels = ["Days", "Hours", "Minutes", "Seconds"];
 
-export function NextService() {
+export function NextService({ time = "10:00 AM" }: { time?: string }) {
   const [target, setTarget] = useState<Date | null>(null);
   const [left, setLeft] = useState(0);
+  const label = time.replace(/\s*\(?WAT\)?/i, "").trim();
 
   useEffect(() => {
-    const next = nextSunday();
+    const { hours, minutes } = parseTime(time);
+    const next = nextSunday(hours, minutes);
     setTarget(next);
     setLeft(Math.max(0, next.getTime() - Date.now()));
     const t = window.setInterval(() => {
       setLeft(Math.max(0, next.getTime() - Date.now()));
     }, 1000);
     return () => window.clearInterval(t);
-  }, []);
+  }, [time]);
 
   const days = Math.floor(left / 86_400_000);
   const hours = Math.floor((left % 86_400_000) / 3_600_000);
@@ -58,8 +68,8 @@ export function NextService() {
               weekday: "long",
               day: "numeric",
               month: "long",
-            })} · 10:00 AM WAT`
-          : "Next Sunday worship · 10:00 AM WAT"}
+            })} · ${label} WAT`
+          : `Next Sunday worship · ${label} WAT`}
       </p>
     </div>
   );

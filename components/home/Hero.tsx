@@ -104,7 +104,7 @@ export function Hero({ content }: { content: SiteContent }) {
 
             <div className="relative hidden justify-self-end md:block">
               <div className="absolute -left-8 -top-8 hidden lg:block">
-                <RotatingSeal text="Sanctuary of Truth & Joy" />
+                <RotatingSeal text={site.tagline} />
               </div>
               <blockquote className="max-w-sm border border-ivory/15 bg-ink/25 p-7 backdrop-blur-md">
                 <Star className="mb-5 h-4 w-4 text-gold" />

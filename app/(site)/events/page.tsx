@@ -20,6 +20,10 @@ export const metadata: Metadata = {
 export default async function EventsPage() {
   const content = await getContent();
   const [featured, ...rest] = content.events;
+  const sunday = content.services.filter((s) => s.day.toLowerCase() === "sunday");
+  const sundayLine = sunday.length
+    ? sunday.map((s) => `${s.name} at ${s.time}`).join(", ")
+    : content.site.serviceTime;
 
   return (
     <>
@@ -158,8 +162,8 @@ export default async function EventsPage() {
                   Every Sunday is an open door.
                 </p>
                 <p className="mt-1 max-w-lg text-[0.82rem] leading-relaxed text-muted">
-                  Sunday School at 9:00 AM, Worship at 10:00 AM. No ticket, no dress
-                  code — just come. Want event reminders? Join our mailing list below.
+                  {sundayLine}. No ticket, no dress code — just come. Want event
+                  reminders? Join our mailing list below.
                 </p>
               </div>
             </div>

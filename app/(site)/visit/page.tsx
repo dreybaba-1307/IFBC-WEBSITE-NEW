@@ -7,6 +7,7 @@ import { Reveal } from "@/components/motion";
 import { MessageForm } from "@/components/site/MessageForm";
 import { Accordion } from "@/components/site/Accordion";
 import { NextService } from "@/components/site/NextService";
+import { worshipStartTime } from "@/lib/content";
 import { getContent } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -52,9 +53,16 @@ export default async function VisitPage() {
     contact.mapQuery,
   )}&z=15&output=embed`;
 
+  const sunday = services.filter((s) => s.day.toLowerCase() === "sunday");
   const essentials = [
-    { icon: Clock, title: "Service times", text: "Sunday School 9:00 AM · Worship 10:00 AM" },
-    { icon: MapPin, title: "Location", text: "23 Coker Street, off College Road, Ifako-Agege" },
+    {
+      icon: Clock,
+      title: "Service times",
+      text: sunday.length
+        ? sunday.map((s) => `${s.name} ${s.time}`).join(" · ")
+        : site.serviceTime,
+    },
+    { icon: MapPin, title: "Location", text: contact.address },
     { icon: Shirt, title: "What to wear", text: "Come as you are — no dress code" },
     { icon: Baby, title: "Children", text: "Children’s church available during worship" },
     { icon: Car, title: "Parking", text: "Street parking with usher guidance" },
@@ -127,7 +135,7 @@ export default async function VisitPage() {
                   <Star className="h-3.5 w-3.5 text-gold" />
                 </div>
                 <div className="mt-7">
-                  <NextService />
+                  <NextService time={worshipStartTime(content)} />
                 </div>
               </div>
             </Reveal>
@@ -249,7 +257,7 @@ export default async function VisitPage() {
         </div>
         <div className="container-x flex flex-col items-start justify-between gap-4 py-6 sm:flex-row sm:items-center">
           <p className="flex items-center gap-2 font-mono text-[0.56rem] uppercase tracking-[0.22em] text-ink/70">
-            <MapPin className="h-3.5 w-3.5 text-clay" /> 23 Coker Street · Ifako-Agege · Lagos
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-clay" /> {contact.address}
           </p>
           <p className="font-mono text-[0.56rem] uppercase tracking-[0.22em] text-ink/65">
             See you Sunday

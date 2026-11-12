@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -114,6 +114,18 @@ export function AdminDashboard({ initial }: { initial: SiteContent }) {
     [content.messages],
   );
 
+  // Nothing is written until "Save changes" is pressed, so warn before the
+  // browser throws away unsaved edits (refresh, tab close, back button).
+  useEffect(() => {
+    if (!dirty) return;
+    const guard = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", guard);
+    return () => window.removeEventListener("beforeunload", guard);
+  }, [dirty]);
+
   function flash(tone: "ok" | "err", text: string) {
     setToast({ tone, text });
     window.setTimeout(() => setToast(null), 3200);
@@ -141,6 +153,10 @@ export function AdminDashboard({ initial }: { initial: SiteContent }) {
         body: JSON.stringify(content),
       });
       const json = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        router.replace("/admin/login");
+        throw new Error("Your session expired. Sign in, then save again.");
+      }
       if (!res.ok) throw new Error(json.error || "Could not save.");
       if (json.content) setContent(json.content);
       setDirty(false);

@@ -5,6 +5,7 @@ import { PageHero, Kicker, Star } from "@/components/ui";
 import { Reveal } from "@/components/motion";
 import { PageCTA } from "@/components/site/PageCTA";
 import { NextService } from "@/components/site/NextService";
+import { worshipStartTime } from "@/lib/content";
 import { getContent } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -173,7 +174,7 @@ export default async function SermonsPage() {
             </div>
           </div>
           <Reveal variant="right">
-            <NextService />
+            <NextService time={worshipStartTime(content)} />
           </Reveal>
         </div>
       </section>

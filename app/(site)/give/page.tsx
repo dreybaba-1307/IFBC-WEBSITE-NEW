@@ -17,14 +17,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "/give" },
 };
 
-const faqs = [
+const faqs = (givingEmail: string) => [
   {
     q: "How are my gifts used?",
     a: "Your tithes and offerings support the daily ministry of the church — worship, discipleship, pastoral care, outreach, facilities, and the support of our ministers and missionaries. Our finance team manages resources with integrity and transparency.",
   },
   {
     q: "Will I receive a receipt?",
-    a: "Yes. Please send your transfer confirmation to finance@ifakobaptist.org and our finance team will issue a receipt. Include your name and the purpose of the gift.",
+    a: `Yes. Please send your transfer confirmation to ${givingEmail} and our finance team will issue a receipt. Include your name and the purpose of the gift.`,
   },
   {
     q: "Can I give in person?",
@@ -178,7 +178,7 @@ export default async function GivePage() {
             </h2>
           </div>
           <div className="mt-10">
-            <Accordion items={faqs} />
+            <Accordion items={faqs(site.givingEmail)} />
           </div>
           <div className="mt-10 text-center">
             <Link href="/contact" className="btn btn-outline">

@@ -97,7 +97,7 @@ export function Rhythm({ content }: { content: SiteContent }) {
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
               <p className="flex items-center gap-2 text-xs text-muted">
                 <MapPin className="h-3.5 w-3.5 text-clay" />
-                23 Coker Street, Ifako-Agege, Lagos
+                {content.contact.address}
               </p>
               <Link href="/visit" className="link-line text-[0.7rem] uppercase tracking-[0.16em] text-ink/70">
                 What to expect

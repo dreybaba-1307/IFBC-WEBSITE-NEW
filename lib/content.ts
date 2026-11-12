@@ -626,3 +626,14 @@ export function normalizeContent(saved: Partial<SiteContent> | null | undefined)
     messages: saved.messages ?? [],
   };
 }
+
+/**
+ * Start time of the Sunday worship service, e.g. "10:00 AM".
+ * Keeps the live countdown and its label in step with admin edits.
+ */
+export function worshipStartTime(content: SiteContent): string {
+  const sunday = content.services.filter((s) => s.day.toLowerCase() === "sunday");
+  const worship =
+    sunday.find((s) => /worship/i.test(s.name)) ?? sunday[sunday.length - 1];
+  return worship?.time ?? "10:00 AM";
+}

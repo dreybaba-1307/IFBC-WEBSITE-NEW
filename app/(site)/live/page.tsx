@@ -7,16 +7,19 @@ import { Reveal } from "@/components/motion";
 import { NextService } from "@/components/site/NextService";
 import { MessageForm } from "@/components/site/MessageForm";
 import { PageCTA } from "@/components/site/PageCTA";
+import { worshipStartTime } from "@/lib/content";
 import { getContent } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Watch live",
-  description:
-    "Worship with Ifako First Baptist Church online. Watch our Sunday service live on YouTube at 10:00 AM WAT.",
-  alternates: { canonical: "/live" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { site } = await getContent();
+  return {
+    title: "Watch live",
+    description: `Worship with ${site.name} online. Watch our Sunday service live on YouTube — ${site.serviceTime}.`,
+    alternates: { canonical: "/live" },
+  };
+}
 
 export default async function LivePage() {
   const content = await getContent();
@@ -44,7 +47,7 @@ export default async function LivePage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-clay opacity-70" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-clay" />
               </span>
-              Streams Sundays · 10:00 AM WAT
+              Streams {site.serviceTime.replace(/\s*\(WAT\)/i, "")}
             </span>
           </div>
 
@@ -129,7 +132,7 @@ export default async function LivePage() {
                   Next service begins in
                 </p>
                 <div className="mt-6">
-                  <NextService />
+                  <NextService time={worshipStartTime(content)} />
                 </div>
                 <a
                   href={site.socials.youtube}

@@ -521,7 +521,7 @@ export function LitParagraph({
 /* ------------------------------------------------------------------ */
 /* Preloader                                                           */
 /* ------------------------------------------------------------------ */
-export function Preloader({ label }: { label: string }) {
+export function Preloader({ label, tagline }: { label: string; tagline: string }) {
   const [done, setDone] = useState(true);
   const [count, setCount] = useState(0);
 
@@ -577,7 +577,7 @@ export function Preloader({ label }: { label: string }) {
         <span className="mt-5 font-display text-5xl text-ivory/90">{count}</span>
       </div>
       <span className="absolute bottom-10 font-mono text-[0.55rem] uppercase tracking-[0.35em] text-ivory/55">
-        Sanctuary of Truth &amp; Joy
+        {tagline}
       </span>
     </div>
   );

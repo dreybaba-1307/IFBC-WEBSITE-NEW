@@ -24,6 +24,14 @@ export function PageCTA({
   copy?: string;
   image?: string;
 }) {
+  const sunday = content.services.filter((s) => s.day.toLowerCase() === "sunday");
+  const sundayTimes = sunday.length
+    ? sunday.map((s) => s.time).join(" & ")
+    : content.site.serviceTime;
+  const sundayNames = sunday.length
+    ? sunday.map((s) => s.name.replace(/\s*service$/i, "")).join(" · ")
+    : "Sunday School · Worship";
+
   return (
     <section className="grain grain-dark relative overflow-hidden bg-ink py-24 text-ivory md:py-32">
       <div className="absolute inset-0">
@@ -62,15 +70,15 @@ export function PageCTA({
               <p className="flex items-center gap-2 font-mono text-[0.55rem] uppercase tracking-[0.22em] text-gold-soft/80">
                 <Clock className="h-3.5 w-3.5" /> Sundays
               </p>
-              <p className="mt-2 font-display text-xl">9:00 AM &amp; 10:00 AM</p>
-              <p className="mt-1 text-[0.75rem] text-ivory/45">Sunday School · Worship</p>
+              <p className="mt-2 font-display text-xl">{sundayTimes}</p>
+              <p className="mt-1 text-[0.75rem] text-ivory/45">{sundayNames}</p>
             </div>
             <div>
               <p className="flex items-center gap-2 font-mono text-[0.55rem] uppercase tracking-[0.22em] text-gold-soft/80">
                 <MapPin className="h-3.5 w-3.5" /> Find us
               </p>
               <p className="mt-2 text-[0.85rem] leading-relaxed text-ivory/70">
-                23 Coker Street, Ifako-Agege, Lagos
+                {content.contact.address}
               </p>
             </div>
             <div className="sm:col-span-2">

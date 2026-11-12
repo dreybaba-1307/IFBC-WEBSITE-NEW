@@ -159,7 +159,7 @@ export default async function EventPage({ params }: Params) {
                 <dd className="pl-6 text-[0.88rem] leading-relaxed text-ink/80">
                   {event.location}
                   <br />
-                  23 Coker Street, Ifako-Agege, Lagos
+                  {content.contact.address}
                 </dd>
                 <dt className="label flex items-center gap-2">
                   <Clock className="h-4 w-4 shrink-0 text-clay" aria-hidden />

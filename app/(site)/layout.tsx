@@ -14,7 +14,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
       <SmoothScroll />
       <Cursor />
       <ScrollProgress />
-      <Preloader label="Ifako First Baptist" />
+      <Preloader label={content.site.name} tagline={content.site.tagline} />
       <Header
         name={content.site.name}
         tagline={content.site.tagline}

@@ -19,40 +19,52 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://www.ifbclagos.org"),
-  title: {
-    default: "Ifako First Baptist Church — Sanctuary of Truth & Joy",
-    template: "%s · Ifako First Baptist Church",
-  },
-  description:
-    "A Baptist family in the heart of Ifako-Agege, Lagos. Rooted in faith, committed to community. Join us Sundays: Sunday School 9:00 AM, Worship 10:00 AM.",
-  keywords: [
-    "Ifako First Baptist Church",
-    "Baptist church Lagos",
-    "Ifako Agege church",
-    "Nigerian Baptist Convention",
-    "Sunday worship Lagos",
-  ],
-  openGraph: {
-    title: "Ifako First Baptist Church — Sanctuary of Truth & Joy",
-    description:
-      "Rooted in faith. Committed to community. A Baptist family in the heart of Ifako-Agege, Lagos.",
-    images: [{ url: "/images/hero-worship.jpg", width: 1800, height: 1200, alt: "Worship at Ifako First Baptist Church" }],
-    type: "website",
-    locale: "en_NG",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Ifako First Baptist Church",
-    description: "Sanctuary of Truth & Joy — Ifako-Agege, Lagos.",
-    images: ["/images/hero-worship.jpg"],
-  },
-  icons: {
-    icon: [{ url: "/images/logo_v3.png", type: "image/png" }],
-    apple: "/images/logo_v3.png",
-  },
-};
+// Read from the store so admin edits to the name, tagline, description and
+// logo also update the browser tab, search results and social previews.
+export async function generateMetadata(): Promise<Metadata> {
+  const { site, hero } = await getContent();
+  const title = site.tagline ? `${site.name} — ${site.tagline}` : site.name;
+
+  return {
+    metadataBase: new URL("https://www.ifbclagos.org"),
+    title: {
+      default: title,
+      template: `%s · ${site.name}`,
+    },
+    description: site.description,
+    keywords: [
+      site.name,
+      "Baptist church Lagos",
+      "Ifako Agege church",
+      "Nigerian Baptist Convention",
+      "Sunday worship Lagos",
+    ],
+    openGraph: {
+      title,
+      description: site.description,
+      images: [
+        {
+          url: hero.image,
+          width: 1800,
+          height: 1200,
+          alt: `Worship at ${site.name}`,
+        },
+      ],
+      type: "website",
+      locale: "en_NG",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: site.description,
+      images: [hero.image],
+    },
+    icons: {
+      icon: [{ url: site.logo, type: "image/png" }],
+      apple: site.logo,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#0e1410",
@@ -76,7 +88,7 @@ export default async function RootLayout({
     email: content.site.email,
     address: {
       "@type": "PostalAddress",
-      streetAddress: "23, Coker Street, off College Road, Ifako Agege",
+      streetAddress: content.site.address,
       addressLocality: "Agege",
       addressRegion: "Lagos",
       addressCountry: "NG",
